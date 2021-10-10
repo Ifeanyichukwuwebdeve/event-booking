@@ -1,13 +1,13 @@
 const express = require('express')
-const bodyParser = require('body-parser')
+// const bodyParser = require('body-parser')
+const mongoose = require('mongoose')
+require('dotenv').config()
 const { graphqlHTTP } = require('express-graphql')
 const { buildSchema } = require('graphql')
 
+const Event = require('./models/Event')
+
 const app = express()
-
-// app.use(bodyParser.json())
-
-const events = []
 
 app.use('/api', graphqlHTTP({
   schema: buildSchema(`
@@ -39,19 +39,24 @@ app.use('/api', graphqlHTTP({
     }
   `),
   rootValue: {
-    events: () => {
+    events: async () => {
+      const events = await Event.find()
       return events
     },
-    createEvent: (args) => {
-      const event = {
-        _id: Math.random().toString(),
-        title: args.eventInput.title,
-        description: args.eventInput.description,
-        price: +args.eventInput.price,
-        date: new Date().toISOString()
+    createEvent: async (args) => {
+      try {
+        const event = new Event({
+          title: args.eventInput.title,
+          description: args.eventInput.description,
+          price: +args.eventInput.price,
+          date: new Date(args.eventInput.date).toISOString()
+        })
+        console.log(args.eventInput.date)
+        const result = await event.save()
+        return result
+      } catch (error) {
+        console.log(error)
       }
-      events.push(event)
-      return event
     }
   },
   graphiql: true
@@ -62,5 +67,21 @@ app.use('/api', graphqlHTTP({
 app.get('/', (req, res, next) => {
   res.send('Welcome to our server')
 })
+const connect = process.env.MONGODB_CONNECT
+const connectDB = async () => {
+  try {
+    const res = await mongoose.connect(connect, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true
+    })
+    console.log('Mongodb connected')
+  } catch (error) {
+    console.log(error)
+  }
+}
 
-app.listen(8000)
+
+app.listen(8000, connectDB)
+
