@@ -4,8 +4,10 @@ const mongoose = require('mongoose')
 require('dotenv').config()
 const { graphqlHTTP } = require('express-graphql')
 const { buildSchema } = require('graphql')
+const bcrypt = require('bcryptjs')
 
 const Event = require('./models/Event')
+const User = require('./models/User')
 
 const app = express()
 
@@ -19,6 +21,12 @@ app.use('/api', graphqlHTTP({
       date: String!
     }
 
+    type User {
+      _id: ID!
+      email: String!
+      password: String
+    }
+
     input EventInput {
       title: String!
       description: String!
@@ -26,11 +34,17 @@ app.use('/api', graphqlHTTP({
       date: String!
     }
 
+    input UserInput {
+      email: String!
+      password: String!
+    }
+
     type RootQuery {
       events: [Event!]!
     }
     type RootMutation {
       createEvent(eventInput: EventInput): Event
+      createUser(userInput: UserInput): User
     }
 
     schema {
@@ -49,13 +63,36 @@ app.use('/api', graphqlHTTP({
           title: args.eventInput.title,
           description: args.eventInput.description,
           price: +args.eventInput.price,
-          date: new Date(args.eventInput.date).toISOString()
+          date: new Date(args.eventInput.date).toISOString(),
+          creator: '6164394aa3bc5f3b18bba226'
         })
-        console.log(args.eventInput.date)
         const result = await event.save()
+        const user = await User.findById('6164394aa3bc5f3b18bba226')
+        if(!user) {
+          throw new Error('User doesn\'t exist')
+        }
+        user.createdEvents.push(result)
+        await user.save()
         return result
       } catch (error) {
-        console.log(error)
+        throw error
+      }
+    },
+    createUser: async (args) => {
+      try {
+        const foundUser = await User.findOne({ email: args.userInput.email })
+        if (foundUser) {
+          throw new Error('User exits already')
+        }
+        const hashedPassword = await bcrypt.hash(args.userInput.password, 12)
+        const user = new User ({
+          email: args.userInput.email,
+          password: hashedPassword
+        })
+        const result = await user.save()
+        return { ...result._doc, password: null }
+      } catch (error) {
+        throw error
       }
     }
   },

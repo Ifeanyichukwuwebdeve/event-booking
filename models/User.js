@@ -12,7 +12,7 @@ const userSchema = new Schema ({
     type: String,
     required: true
   },
-  createdEvent: [
+  createdEvents: [
     {
       type: Schema.Types.ObjectId,
       ref: 'Event'
