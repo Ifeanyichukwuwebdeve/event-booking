@@ -11,6 +11,26 @@ const User = require('./models/User')
 
 const app = express()
 
+const events = async eventsIds => {
+  try {
+    const events = await Event.find({ _id: {$in: eventsIds }})
+    return events.map(event => {
+      return { ...event._doc, creator: userFun.bind(this, event.creator)}
+    })
+  }catch (error) {
+    throw error
+  }
+}
+
+const userFun = async userId => {
+  try{
+    const user = await User.findById(userId).select('-password')
+    return { ...user._doc, createdEvents: events.bind(this, user.createdEvents)}
+  } catch (error) {
+    throw error
+  }
+}
+
 app.use('/api', graphqlHTTP({
   schema: buildSchema(`
     type Event {
@@ -19,12 +39,14 @@ app.use('/api', graphqlHTTP({
       description: String!
       price: Float!
       date: String!
+      creator: User!
     }
 
     type User {
       _id: ID!
       email: String!
       password: String
+      createdEvents: [Event!]
     }
 
     input EventInput {
@@ -55,7 +77,10 @@ app.use('/api', graphqlHTTP({
   rootValue: {
     events: async () => {
       const events = await Event.find()
-      return events
+      return events.map(event => {
+        const result = { ...event._doc, creator: userFun.bind(this, event.creator)}
+        return result
+      })
     },
     createEvent: async (args) => {
       try {
@@ -73,7 +98,7 @@ app.use('/api', graphqlHTTP({
         }
         user.createdEvents.push(result)
         await user.save()
-        return result
+        return { ...result._doc, creator: userFun.bind(this, result.creator)}
       } catch (error) {
         throw error
       }
