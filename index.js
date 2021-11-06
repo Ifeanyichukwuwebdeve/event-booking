@@ -9,32 +9,32 @@ const graphQlResolvers = require('./graphql/resolvers/index')
 
 const app = express()
 
-app.use('/api', graphqlHTTP({
-  schema: graphQlSchema,
-  rootValue: graphQlResolvers,
-  graphiql: true
-})
+app.use(
+	'/api',
+	graphqlHTTP({
+		schema: graphQlSchema,
+		rootValue: graphQlResolvers,
+		graphiql: true
+	})
 )
 
-
 app.get('/', (req, res, next) => {
-  res.send('Welcome to our server')
+	res.send('Welcome to our server')
 })
 const connect = process.env.MONGODB_CONNECT
 const connectDB = async () => {
-  try {
-    const res = await mongoose.connect(connect, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true
-    })
-    console.log('Mongodb connected')
-  } catch (error) {
-    console.log(error)
-  }
+	try {
+		const res = await mongoose.connect(connect, {
+			useNewUrlParser: true,
+			useUnifiedTopology: true,
+			useUnifiedTopology: true,
+			useCreateIndex: true
+		})
+		console.log('Mongodb connected')
+	} catch (error) {
+		console.log(error)
+		throw error
+	}
 }
 
-
 app.listen(8000, connectDB)
-
