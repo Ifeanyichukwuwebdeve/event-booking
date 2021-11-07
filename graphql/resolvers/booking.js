@@ -41,6 +41,7 @@ module.exports = {
 			throw error
 		}
 	},
+	// Ts
 	cancelBooking: async (args) => {
 		try {
 			const booking = await Booking.findById(args.bookingId).populate('event')
