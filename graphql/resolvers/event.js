@@ -11,13 +11,13 @@ module.exports = {
 				return populateEvent(event)
 			})
 		} catch (error) {
-			console.log(error)
+			// console.log(error)
 			throw error
 		}
 	},
 	createEvent: async (args, req) => {
 		try {
-			// if (!req.isAuth) throw new Error('Unauthenticated')
+			if (!req.isAuth) throw new Error('Unauthenticated')
 			const event = new Event({
 				title: args.eventInput.title,
 				description: args.eventInput.description,

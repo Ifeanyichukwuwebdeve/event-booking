@@ -5,7 +5,7 @@ const { dateToString } = require('../../helpers/date')
 
 module.exports = {
 	bookings: async (args, req) => {
-		// if (!req.isAuth) throw new Error('Unauthenticated')
+		if (!req.isAuth) throw new Error('Unauthenticated')
 		try {
 			const bookings = await Booking.find()
 			return bookings.map((booking) => {

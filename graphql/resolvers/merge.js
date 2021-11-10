@@ -9,6 +9,10 @@ const eventLoader = new DataLoader((eventIds) => {
 	return events(eventIds)
 })
 
+const userLoader = new DataLoader((userIds) => {
+	return User.find({ _id: { $in: userIds } }).select('-password')
+})
+
 const events = async (eventsIds) => {
 	try {
 		const events = await Event.find({ _id: { $in: eventsIds } })
@@ -22,11 +26,10 @@ const events = async (eventsIds) => {
 
 const singleEvent = async (eventId) => {
 	try {
-		console.log(eventId)
-		const event = await eventLoader.load(eventId)
+		const event = await eventLoader.load(eventId.toString())
 		return event
 	} catch (error) {
-		console.log(error)
+		// console.log(error)
 		throw error
 	}
 }
@@ -43,11 +46,10 @@ const populateEvent = (event) => {
 
 const userFun = async (userId) => {
 	try {
-		const user = await User.findById(userId).select('-password')
-		console.log(user)
+		const user = await userLoader.load(userId.toString())
 		return {
 			...user._doc,
-			createdEvents: eventLoader.loadMany.bind(this, user.createdEvents)
+			createdEvents: () => eventLoader.loadMany(user.createdEvents)
 		}
 	} catch (error) {
 		console.log(error)
